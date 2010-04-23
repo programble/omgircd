@@ -104,6 +104,8 @@ class User:
                 self.handle_NICK(parsed)
             elif command == "USER":
                 self.handle_USER(parsed)
+            elif command == "PRIVMSG":
+                self.handle_PRIVMSG(parsed)
             else:
                 self.send_numeric(421, "%s :Unknown command" % command)
     
@@ -127,13 +129,16 @@ class User:
                 return
         
         # Check if nick is already in use
-        if nick in [user.nickname for user in self.server.users]:
+        if nick.lower() in [user.nickname.lower() for user in self.server.users]:
             self.send_numeric(433, "%s :Nickname is already in use" % nick)
             return
         
         # Nick is AWWW RIGHT
         self.broadcast([self], "NICK :%s" % nick)
         self.nickname = nick
+        
+        if self.username != "unknown":
+            self.welcome()
     
     def handle_USER(self, recv):
         if len(recv) < 5:
@@ -151,7 +156,32 @@ class User:
         self.username = username
         self.realname = realname
         
-        self.welcome()
+        if self.nickname != '*':
+            self.welcome()
+    
+    def handle_PRIVMSG(self, recv):
+        if len(recv) < 2:
+            self.send_numeric(411, ":No recipient given (PRIVMSG)")
+            return
+        elif len(recv) < 3:
+            self.send_numeric(412, ":No text to send")
+            return
+        
+        target = recv[1]
+        msg = recv[2]
+        
+        # PM to user
+        if target[0] != "#":
+            # Find user
+            user = [user for user in self.server.users if user.nickname.lower() == target.lower()]
+            
+            # User does not exist
+            if user == []:
+                self.send_numeric(401, "%s :No such nick/channel" % target)
+                return
+            
+            # Broadcast message
+            self.broadcast(user, "PRIVMSG %s :%s" % (target, msg))
 
 class Server(socket.socket):
     def __init__(self):
@@ -168,6 +198,7 @@ class Server(socket.socket):
     
     def run(self):
         # Bind port and listen
+        self.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.bind((config.bind_host, config.bind_port))
         self.listen(5)
         
@@ -185,14 +216,38 @@ class Server(socket.socket):
             
             # Read from each user
             for user in [user for user in read if user != self]:
-                user.recvbuffer += user.socket.recv(4096)
+                try:
+                    recv = user.socket.recv(4096)
+                except socket.error, e:
+                    # TODO: Broadcast quit
+                    self.users.remove(user)
+                if recv == '':
+                    # TODO: Broadcast quit
+                    self.users.remove(user)
+                user.recvbuffer += recv
                 user.handle_recv()
             
             # Send to each user
             for user in write:
-                sent = user.socket.send(user.sendbuffer)
-                user.sendbuffer = user.sendbuffer[sent:]
+                try:
+                    sent = user.socket.send(user.sendbuffer)
+                    user.sendbuffer = user.sendbuffer[sent:]
+                except socket.error, e:
+                    # TODO: Broadcast quit
+                    self.users.remove(user)
+                    
+    def shutdown(self):
+        for user in self.users:
+            user.socket.close()
+        self.close()
 
 if __name__ == "__main__":
     server = Server()
-    server.run()
+    try:
+        server.run()
+    except Exception, e:
+        print e
+    except KeyboardInterrupt:
+        pass
+    finally:
+        server.shutdown()
