@@ -52,6 +52,8 @@ class User:
                 self.hostname = self.ip
             self.server.hostcache[self.ip] = self.hostname
         
+        self.away = False
+        
         self.channels = []
     
     def __repr__(self):
@@ -158,6 +160,8 @@ class User:
                 self.handle_TOPIC(parsed)
             elif command.upper() == "ISON":
                 self.handle_ISON(parsed)
+            elif command.upper() == "AWAY":
+                self.handle_AWAY(parsed)
             elif command.upper() == "QUIT":
                 self.handle_QUIT(parsed)
             else:
@@ -263,6 +267,9 @@ class User:
             if user == []:
                 self.send_numeric(401, "%s :No such nick/channel" % target)
                 return
+            
+            if user[0].away:
+                self.send_numeric(301, "%s :%s" % (user[0].nickname, user[0].away))
             
             # Broadcast message
             self.broadcast(user, "PRIVMSG %s :%s" % (target, msg))
@@ -439,6 +446,14 @@ class User:
         online = [nick for nick in nicks if nick.lower() in [user.nickname.lower() for user in self.server.users]]
         
         self.send_numeric(303, ":%s" % " ".join(online))
+    
+    def handle_AWAY(self, recv):
+        if len(recv) < 2:
+            self.away = False
+            self.send_numeric(305, ":You are no longer marked as being away")
+        else:
+            self.away = recv[1]
+            self.send_numeric(306, ":You have been marked as being away")
     
     def handle_QUIT(self, recv):
         if len(recv) > 1:
