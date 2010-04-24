@@ -39,6 +39,8 @@ class User:
         self.recvbuffer = ""
         self.sendbuffer = ""
         
+        self.ping = time.time()
+        
         self.nickname = "*"
         self.username = "unknown"
         self.realname = "Unknown"
@@ -130,6 +132,8 @@ class User:
         while self.recvbuffer.find("\r\n") != -1:
             recv = self.recvbuffer[:self.recvbuffer.find("\r\n")]
             self.recvbuffer = self.recvbuffer[self.recvbuffer.find("\r\n")+2:]
+            
+            self.ping = time.time()
             
             if recv.strip() == '':
                 continue
@@ -343,7 +347,8 @@ class User:
         self.channels.append(channel)
         
         self.broadcast(channel.users, "JOIN :%s" % recv[1])
-        self.handle_TOPIC(("TOPIC", channel.name))
+        if channel.topic_time != 0:
+            self.handle_TOPIC(("TOPIC", channel.name))
         self.handle_NAMES(("NAMES", channel.name))
     
     def handle_PART(self, recv):
