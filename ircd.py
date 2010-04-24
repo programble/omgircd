@@ -142,6 +142,8 @@ class User:
             command = parsed[0]
             if command.upper() == "PING":
                 self.handle_PING(parsed)
+            elif command.upper() == "PONG":
+                pass
             elif command.upper() == "NICK":
                 self.handle_NICK(parsed)
             elif command.upper() == "USER":
@@ -510,7 +512,7 @@ class Server(socket.socket):
             # Find users with pending send data
             sendable = [user for user in self.users if user.sendbuffer]
             
-            read, write, error = select([self] + self.users, sendable, [self] + self.users)
+            read, write, error = select([self] + self.users, sendable, [self] + self.users, 225.0)
             
             # Is there a new connection to accept?
             if self in read:
@@ -543,6 +545,10 @@ class Server(socket.socket):
             # Ping timeouts
             for user in [user for user in self.users if time.time() - user.ping > 250.0]:
                 user.quit("Ping timeout: 250 seconds")
+            
+            # Send out pings
+            for user in [user for user in self.users if time.time() - user.ping > 225.0]:
+                user._send("PING :%s" % self.hostname)
     
     def shutdown(self):
         for user in self.users:
