@@ -113,6 +113,8 @@ class User:
                 self.handle_PRIVMSG(parsed)
             elif command == "JOIN":
                 self.handle_JOIN(parsed)
+            elif command == "PART":
+                self.handle_PART(parsed)
             elif command == "NAMES":
                 self.handle_NAMES(parsed)
             else:
@@ -212,7 +214,6 @@ class User:
         
         channel = [channel for channel in self.server.channels if channel.name == recv[1]]
         
-        
         # Create non-existent channel
         if channel == []:
             new = Channel(recv[1])
@@ -231,8 +232,34 @@ class User:
         self.channels.append(channel)
         
         self.broadcast(channel.users, "JOIN :%s" % recv[1])
-        self._send(":%s MODE %s +%s" % (self.server.hostname, channel.name, channel.modes))
+        # TODO: Topic stuff
+        #>>> :gibson.freenode.net 332 programb1e #(code) :This channel is better than #(). Period. | http://github.com/Raynes/sexpbot | JStoker is awesome. | $dumpcmds for a list of bot commands.
+        #:gibson.freenode.net 333 programb1e #(code) sexpbot!~irclj@unaffiliated/raynes 1271980386
         self.handle_NAMES(("NAMES", channel.name))
+    
+    def handle_PART(self, recv):
+        if len(recv) < 2:
+            self.send_numeric(461, "PART :Not enough parameters")
+            return
+        
+        target = recv[1]
+        if len(recv) > 2:
+            reason = recv[2]
+        else:
+            reason = ""
+        
+        channel = [channel for channel in self.channels if channel.name == target]
+        
+        if channel == []:
+            self.send_numeric(442, "%s :You're not on that channel" % target)
+            return
+        
+        channel = channel[0]
+        self.broadcast(channel.users, "PART %s :%s" % (target, reason))
+        self.channels.remove(channel)
+        channel.users.remove(self)
+        if channel.usermodes.has_key(self):
+            channel.usermodes[self] = ''
     
     def handle_NAMES(self, recv):
         if len(recv) < 2:
@@ -257,6 +284,8 @@ class User:
                     users.append('%'+user.nickname)
                 elif 'v' in channel.usermodes[user]:
                     users.append('+'+user.nickname)
+                else:
+                    users.append(user.nickname)
             else:
                 users.append(user.nickname)
         
