@@ -88,6 +88,30 @@ class User:
         # MOTD
         self.handle_MOTD(("MOTD",))
     
+    def quit(self, reason):
+        # Send error to user
+        self._send("ERROR :Closing link: (%s) [%s]" % (self.fullname(), reason))
+        
+        # Send quit to all users in channels user is in
+        users = []
+        for channel in self.channels:
+            for user in channel.users:
+                if user not in users:
+                    users.append(user)
+        self.broadcast(users, "QUIT :%s" % reason)
+        
+        # Remove user from all channels
+        for channel in self.channels:
+            channel.users.remove(self)
+        
+        # Remove user from server users
+        self.server.users.remove(self)
+        
+        # Close socket
+        self.socket.close()
+        
+        # This User object should now be garbage collected...
+    
     def handle_recv(self):
         while self.recvbuffer.find("\r\n") != -1:
             recv = self.recvbuffer[:self.recvbuffer.find("\r\n")]
@@ -116,6 +140,8 @@ class User:
                 self.handle_PART(parsed)
             elif command.upper() == "NAMES":
                 self.handle_NAMES(parsed)
+            elif command.upper() == "QUIT":
+                self.handle_QUIT(parsed)
             else:
                 self.send_numeric(421, "%s :Unknown command" % command)
     
@@ -152,8 +178,12 @@ class User:
         # Nick is AWWW RIGHT
         self.broadcast([self], "NICK :%s" % nick)
         # Broadcast to all channels user is in
+        users = []
         for channel in self.channels:
-            self.broadcast(channel.users, "NICK :%s" % nick)
+            for user in channel.users:
+                if user not in users:
+                    users.append(user)
+        self.broadcast(users, "NICK :%s" % nick)
         self.nickname = nick
         
         if self.username != "unknown":
@@ -296,6 +326,14 @@ class User:
         
         self.send_numeric(353, "@ %s :%s" % (channel.name, " ".join(users)))
         self.send_numeric(366, "%s :End of /NAMES list." % channel.name)
+    
+    def handle_QUIT(self, recv):
+        if len(recv) > 1:
+            reason = recv[1]
+        else:
+            reason = self.nickname
+        
+        self.quit("Quit: " + reason)
 
 class Channel:
     def __init__(self, name):
@@ -343,11 +381,9 @@ class Server(socket.socket):
                 try:
                     recv = user.socket.recv(4096)
                 except socket.error, e:
-                    # TODO: Broadcast quit
-                    self.users.remove(user)
+                    user.quit("Socket Error")
                 if recv == '':
-                    # TODO: Broadcast quit
-                    self.users.remove(user)
+                    user.quit("Remote host closed the connection")
                 user.recvbuffer += recv
                 user.handle_recv()
             
@@ -357,12 +393,11 @@ class Server(socket.socket):
                     sent = user.socket.send(user.sendbuffer)
                     user.sendbuffer = user.sendbuffer[sent:]
                 except socket.error, e:
-                    # TODO: Broadcast quit
-                    self.users.remove(user)
+                    user.quit("Socket Error")
                     
     def shutdown(self):
         for user in self.users:
-            user.socket.close()
+            user.quit("shutdown")
         self.close()
 
 if __name__ == "__main__":
