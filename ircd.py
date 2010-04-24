@@ -83,7 +83,7 @@ class User:
         self.send_numeric(001, ":Welcome to %s, %s" % (self.server.name, self.fullname()))
         self.send_numeric(002, ":Your host is %s, running version %s" % (self.server.hostname, self.server.version))
         self.send_numeric(003, ":This server was created %s" % self.server.creationtime)
-        self.send_numeric(004, "%s  bohv" % self.server.version)
+        self.send_numeric(004, "%s %s  bohv" % (self.server.hostname, self.server.version))
         self.send_numeric(005, "CHANTYPES=# PREFIX=(ohv)@%+"+" CHANMODES=b,o,h,v NETWORK=%s CASEMAPPING=rfc1459" % self.server.name)
         # MOTD
         self.send_numeric(375, ":%s message of the day" % self.server.hostname)
