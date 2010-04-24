@@ -21,6 +21,7 @@
 #       MA 02110-1301, USA.
 
 import socket
+import time
 
 from select import select
 
@@ -145,6 +146,10 @@ class User:
                 self.handle_PART(parsed)
             elif command.upper() == "NAMES":
                 self.handle_NAMES(parsed)
+            elif command.upper() == "TOPIC":
+                self.handle_TOPIC(parsed)
+            elif command.upper() == "ISON":
+                self.handle_ISON(parsed)
             elif command.upper() == "QUIT":
                 self.handle_QUIT(parsed)
             else:
@@ -169,8 +174,13 @@ class User:
             return
         nick = recv[1]
         
+        if nick.strip() == '':
+            # No nickname given
+            self.send_numeric(431, ":No nickname given")
+            return
+        
         # Check if nick is valid
-        for invalid in "!@#$%&*()=~:;'\".,/?+":
+        for invalid in "!@#$%&*()=~:;'\".,/?+<> ":
             if invalid in nick:
                 self.send_numeric(432, "%s :Erroneous Nickname" % nick)
                 return
@@ -186,12 +196,13 @@ class User:
         users = []
         for channel in self.channels:
             for user in channel.users:
-                if user not in users:
+                if user not in users and user != self:
                     users.append(user)
         self.broadcast(users, "NICK :%s" % nick)
+        old = self.nickname
         self.nickname = nick
         
-        if self.username != "unknown":
+        if old == "*" and self.username != "unknown":
             self.welcome()
     
     def handle_USER(self, recv):
@@ -317,9 +328,7 @@ class User:
         self.channels.append(channel)
         
         self.broadcast(channel.users, "JOIN :%s" % recv[1])
-        # TODO: Topic stuff
-        #>>> :gibson.freenode.net 332 programb1e #(code) :This channel is better than #(). Period. | http://github.com/Raynes/sexpbot | JStoker is awesome. | $dumpcmds for a list of bot commands.
-        #:gibson.freenode.net 333 programb1e #(code) sexpbot!~irclj@unaffiliated/raynes 1271980386
+        self.handle_TOPIC(("TOPIC", channel.name))
         self.handle_NAMES(("NAMES", channel.name))
     
     def handle_PART(self, recv):
@@ -376,6 +385,52 @@ class User:
         
         self.send_numeric(353, "@ %s :%s" % (channel.name, " ".join(users)))
         self.send_numeric(366, "%s :End of /NAMES list." % channel.name)
+    
+    def handle_TOPIC(self, recv):
+        if len(recv) < 2:
+            self.send_numeric(461, "TOPIC :Not enough parameters")
+            return
+        
+        if len(recv) < 3:
+            # Send back topic
+            channel = [channel for channel in self.server.channels if channel.name == recv[1]]
+            if channel == []:
+                self.send_numeric(401, "%s :No such nick/channel" % recv[1])
+                return
+            channel = channel[0]
+            
+            if channel.topic == '':
+                self.send_numeric(331, "%s :No topic is set." % channel.name)
+                return
+            
+            self.send_numeric(332, "%s :%s" % (channel.name, channel.topic))
+            self.send_numeric(333, "%s %s %d" % (channel.name, channel.topic_author, channel.topic_time))
+        else:
+            # Set topic
+            channel = [channel for channel in self.server.channels if channel.name == recv[1]]
+            if channel == []:
+                self.send_numeric(401, "%s :No such nick/channel" % recv[1])
+                return
+            channel = channel[0]
+            
+            # TODO: Make sure user is allowed to change topic (chanmode +t requires user to be op)
+            
+            channel.topic = recv[2]
+            channel.topic_author = self.fullname()
+            channel.topic_time = int(time.time())
+            
+            self.broadcast(channel.users, "TOPIC %s :%s" % (channel.name, channel.topic))
+    
+    def handle_ISON(self, recv):
+        if len(recv) < 2:
+            self.send_numeric(461, "ISON :Not enough parameters")
+            return
+        
+        nicks = recv[1:]
+        
+        online = [nick for nick in nicks if nick.lower() in [user.nickname.lower() for user in self.server.users]]
+        
+        self.send_numeric(303, ":%s" % " ".join(online))
     
     def handle_QUIT(self, recv):
         if len(recv) > 1:
