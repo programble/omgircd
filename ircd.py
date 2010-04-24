@@ -98,23 +98,23 @@ class User:
             
             parsed = self.parse_command(recv)
             command = parsed[0]
-            if command == "PING":
+            if command.upper() == "PING":
                 self.handle_PING(parsed)
-            elif command == "NICK":
+            elif command.upper() == "NICK":
                 self.handle_NICK(parsed)
-            elif command == "USER":
+            elif command.upper() == "USER":
                 self.handle_USER(parsed)
             elif self.nickname == '*' or self.username == 'unknown':
                 self.send_numeric(451, "%s :You have not registered" % command)
-            elif command == "MOTD":
+            elif command.upper() == "MOTD":
                 self.handle_MOTD(parsed)
-            elif command == "PRIVMSG":
+            elif command.upper() == "PRIVMSG":
                 self.handle_PRIVMSG(parsed)
-            elif command == "JOIN":
+            elif command.upper() == "JOIN":
                 self.handle_JOIN(parsed)
-            elif command == "PART":
+            elif command.upper() == "PART":
                 self.handle_PART(parsed)
-            elif command == "NAMES":
+            elif command.upper() == "NAMES":
                 self.handle_NAMES(parsed)
             else:
                 self.send_numeric(421, "%s :Unknown command" % command)
