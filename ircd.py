@@ -512,7 +512,10 @@ class Server(socket.socket):
             # Find users with pending send data
             sendable = [user for user in self.users if user.sendbuffer]
             
-            read, write, error = select([self] + self.users, sendable, [self] + self.users, 225.0)
+            read, write, error = select([self] + self.users, sendable, self.users, 25.0)
+            
+            for user in error:
+                user.quit("Connection reset by peer")
             
             # Is there a new connection to accept?
             if self in read:
@@ -548,7 +551,7 @@ class Server(socket.socket):
             
             # Send out pings
             for user in [user for user in self.users if time.time() - user.ping > 225.0]:
-                user._send("PING :%s" % self.hostname)
+                user.socket.send("PING :%s\r\n" % self.hostname)
     
     def shutdown(self):
         for user in self.users:
