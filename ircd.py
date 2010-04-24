@@ -86,10 +86,7 @@ class User:
         self.send_numeric(004, "%s %s  bohv" % (self.server.hostname, self.server.version))
         self.send_numeric(005, "CHANTYPES=# PREFIX=(ohv)@%+"+" CHANMODES=b,o,h,v NETWORK=%s CASEMAPPING=rfc1459" % self.server.name)
         # MOTD
-        self.send_numeric(375, ":%s message of the day" % self.server.hostname)
-        for line in self.server.motd.split("\n"):
-            self.send_numeric(372, ":- %s" % line)
-        self.send_numeric(376, ":End of message of the day.")
+        self.handle_MOTD(("MOTD",))
     
     def handle_recv(self):
         while self.recvbuffer.find("\r\n") != -1:
@@ -109,6 +106,8 @@ class User:
                 self.handle_USER(parsed)
             elif self.nickname == '*' or self.username == 'unknown':
                 self.send_numeric(451, "%s :You have not registered" % command)
+            elif command == "MOTD":
+                self.handle_MOTD(parsed)
             elif command == "PRIVMSG":
                 self.handle_PRIVMSG(parsed)
             elif command == "JOIN":
@@ -125,6 +124,12 @@ class User:
             self.send_numeric(461, "PING :Not enough parameters")
             return
         self._send(":%s PONG %s :%s" % (self.server.hostname, self.server.hostname, recv[1]))
+    
+    def handle_MOTD(self, recv):
+        self.send_numeric(375, ":%s message of the day" % self.server.hostname)
+        for line in self.server.motd.split("\n"):
+            self.send_numeric(372, ":- %s" % line)
+        self.send_numeric(376, ":End of message of the day.")
     
     def handle_NICK(self, recv):
         if len(recv) < 2:
