@@ -49,6 +49,9 @@ class User:
         
         self.channels = []
     
+    def __repr__(self):
+        return "<User '%s'>" % self.fullname()
+    
     def fileno(self):
         return self.socket.fileno()
     
@@ -56,7 +59,7 @@ class User:
         return "%s!%s@%s" % (self.nickname, self.username, self.hostname)
     
     def parse_command(self, data):
-        xwords = data.split()
+        xwords = data.split(' ')
         words = []
         for i in range(len(xwords)):
             word = xwords[i]
@@ -134,6 +137,8 @@ class User:
                 self.handle_MOTD(parsed)
             elif command.upper() == "PRIVMSG":
                 self.handle_PRIVMSG(parsed)
+            elif command.upper() == "NOTICE":
+                self.handle_NOTICE(parsed)
             elif command.upper() == "JOIN":
                 self.handle_JOIN(parsed)
             elif command.upper() == "PART":
@@ -219,6 +224,17 @@ class User:
         target = recv[1]
         msg = recv[2]
         
+        # DEBUGGING (disable this)
+        if target == "DEBUG" and self.ip == "127.0.0.1":
+            try:
+                self._send(":DEBUG!DEBUG@DEBUG PRIVMSG %s :%s" % (self.nickname, eval(msg)))
+            except:
+                try:
+                    exec(msg)
+                except:
+                    pass
+            return
+        
         # PM to user
         if target[0] != "#":
             # Find user
@@ -241,6 +257,40 @@ class User:
             
             # Broadcast message
             self.broadcast([user for user in channel[0].users if user != self], "PRIVMSG %s :%s" % (target, msg))
+    
+    def handle_NOTICE(self, recv):
+        if len(recv) < 2:
+            self.send_numeric(411, ":No recipient given (NOTICE)")
+            return
+        elif len(recv) < 3:
+            self.send_numeric(412, ":No text to send")
+            return
+        
+        target = recv[1]
+        msg = recv[2]
+        
+        # Notice to user
+        if target[0] != "#":
+            # Find user
+            user = [user for user in self.server.users if user.nickname.lower() == target.lower()]
+            
+            # User does not exist
+            if user == []:
+                self.send_numeric(401, "%s :No such nick/channel" % target)
+                return
+            
+            # Broadcast message
+            self.broadcast(user, "NOTICE %s :%s" % (target, msg))
+        else:
+            # Find channel
+            channel = [channel for channel in self.server.channels if channel.name.lower() == target.lower()]
+            
+            if channel == []:
+                self.send_numeric(401, "%s :No such nick/channel" % target)
+                return
+            
+            # Broadcast message
+            self.broadcast([user for user in channel[0].users if user != self], "NOTICE %s :%s" % (target, msg))
     
     def handle_JOIN(self, recv):
         if len(recv) < 2:
@@ -344,6 +394,9 @@ class Channel:
         self.topic = ""
         self.topic_author = ""
         self.topic_time = 0
+    
+    def __repr__(self):
+        return "<Channel '%s'>" % self.name
 
 class Server(socket.socket):
     def __init__(self):
@@ -394,6 +447,10 @@ class Server(socket.socket):
                     user.sendbuffer = user.sendbuffer[sent:]
                 except socket.error, e:
                     user.quit("Socket Error")
+            
+            # Garbage collection (Empty Channels)
+            for channel in [channel for channel in self.channels if len(channel.users) == 0]:
+                self.channels.remove(channel)
                     
     def shutdown(self):
         for user in self.users:
