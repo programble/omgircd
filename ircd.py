@@ -43,10 +43,14 @@ class User:
         self.username = "unknown"
         self.realname = "Unknown"
         
-        try:
-            self.hostname = socket.gethostbyaddr(self.ip)[0]
-        except:
-            self.hostname = self.ip
+        if self.server.hostcache.has_key(self.ip):
+            self.hostname = self.server.hostcache[self.ip]
+        else:
+            try:
+                self.hostname = socket.gethostbyaddr(self.ip)[0]
+            except:
+                self.hostname = self.ip
+            self.server.hostcache[self.ip] = self.hostname
         
         self.channels = []
     
@@ -93,6 +97,10 @@ class User:
         self.handle_MOTD(("MOTD",))
     
     def quit(self, reason):
+        # Don't quit if already quitted
+        if self not in self.server.users:
+            return
+        
         # Send error to user
         self._send("ERROR :Closing link: (%s) [%s]" % (self.fullname(), reason))
         
@@ -460,6 +468,8 @@ class Server(socket.socket):
         self.users = []
         self.channels = []
         
+        self.hostcache = {}
+        
         self.hostname = config.hostname
         self.name = config.name
         self.creationtime = config.creation
@@ -489,7 +499,7 @@ class Server(socket.socket):
                 try:
                     recv = user.socket.recv(4096)
                 except socket.error, e:
-                    user.quit("Socket Error")
+                    user.quit("Connection reset by peer")
                 if recv == '':
                     user.quit("Remote host closed the connection")
                 user.recvbuffer += recv
@@ -501,7 +511,7 @@ class Server(socket.socket):
                     sent = user.socket.send(user.sendbuffer)
                     user.sendbuffer = user.sendbuffer[sent:]
                 except socket.error, e:
-                    user.quit("Socket Error")
+                    user.quit("Connection reset by peer")
             
             # Garbage collection (Empty Channels)
             for channel in [channel for channel in self.channels if len(channel.users) == 0]:
@@ -516,8 +526,8 @@ if __name__ == "__main__":
     server = Server()
     try:
         server.run()
-    except Exception, e:
-        print e
+    #except Exception, e:
+    #    print e
     except KeyboardInterrupt:
         pass
     finally:
