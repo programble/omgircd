@@ -106,6 +106,8 @@ class User:
                 self.handle_USER(parsed)
             elif command == "PRIVMSG":
                 self.handle_PRIVMSG(parsed)
+            elif command == "JOIN":
+                self.handle_JOIN(parsed)
             else:
                 self.send_numeric(421, "%s :Unknown command" % command)
     
@@ -182,6 +184,50 @@ class User:
             
             # Broadcast message
             self.broadcast(user, "PRIVMSG %s :%s" % (target, msg))
+        else:
+            # Find channel
+            channel = [channel for channel in self.server.channels if channel.name.lower() == target.lower()]
+            
+            if channel == []:
+                self.send_numeric(401, "%s :No such nick/channel" % target)
+                return
+            
+            # Broadcast message
+            self.broadcast([user for user in channel[0].users if user != self], "PRIVMSG %s :%s" % (target, msg))
+    
+    def handle_JOIN(self, recv):
+        if len(recv) < 2:
+            self.send_numeric(461, "JOIN :Not enough parameters")
+            return
+        
+        channel = [channel for channel in self.server.channels if channel.name == recv[1]]
+        
+        # Create non-existent channel
+        if channel == []:
+            new = Channel(recv[1])
+            self.server.channels.append(new)
+            channel = [new]
+        
+        channel = channel[0]
+        channel.users.append(self)
+        self.channels.append(channel)
+        
+        self.broadcast(channel.users, "JOIN :%s" % recv[1])
+        self._send(":%s MODE %s +%s" % (self.server.hostname, channel.name, ''.join(channel.modes)))
+        # FIXME:
+        self.send_numeric(353, "@ %s :%s" % (channel.name, " ".join([user.nickname for user in channel.users])))
+        self.send_numeric(366, "%s :End of /NAMES list." % channel.name)
+        
+
+class Channel:
+    def __init__(self, name):
+        self.name = name
+        self.users = []
+        self.modes = []
+        self.usermodes = []
+        self.topic = ""
+        self.topic_author = ""
+        self.topic_time = 0
 
 class Server(socket.socket):
     def __init__(self):
