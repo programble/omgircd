@@ -343,6 +343,9 @@ class User:
         if channel in self.channels:
             return
         
+        if channel.users == []:
+            channel.usermodes[self] = 'o'
+        
         channel.users.append(self)
         self.channels.append(channel)
         
@@ -536,7 +539,11 @@ class Server(socket.socket):
             # Garbage collection (Empty Channels)
             for channel in [channel for channel in self.channels if len(channel.users) == 0]:
                 self.channels.remove(channel)
-                    
+            
+            # Ping timeouts
+            for user in [user for user in self.users if time.time() - user.ping > 250.0]:
+                user.quit("Ping timeout: 250 seconds")
+    
     def shutdown(self):
         for user in self.users:
             user.quit("shutdown")
