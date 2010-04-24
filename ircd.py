@@ -96,6 +96,9 @@ class User:
             recv = self.recvbuffer[:self.recvbuffer.find("\r\n")]
             self.recvbuffer = self.recvbuffer[self.recvbuffer.find("\r\n")+2:]
             
+            if recv.strip() == '':
+                continue
+            
             parsed = self.parse_command(recv)
             command = parsed[0]
             if command == "PING":
@@ -104,10 +107,14 @@ class User:
                 self.handle_NICK(parsed)
             elif command == "USER":
                 self.handle_USER(parsed)
+            elif self.nickname == '*' or self.username == 'unknown':
+                self.send_numeric(451, "%s :You have not registered" % command)
             elif command == "PRIVMSG":
                 self.handle_PRIVMSG(parsed)
             elif command == "JOIN":
                 self.handle_JOIN(parsed)
+            elif command == "NAMES":
+                self.handle_NAMES(parsed)
             else:
                 self.send_numeric(421, "%s :Unknown command" % command)
     
@@ -137,6 +144,9 @@ class User:
         
         # Nick is AWWW RIGHT
         self.broadcast([self], "NICK :%s" % nick)
+        # Broadcast to all channels user is in
+        for channel in self.channels:
+            self.broadcast(channel.users, "NICK :%s" % nick)
         self.nickname = nick
         
         if self.username != "unknown":
@@ -202,29 +212,63 @@ class User:
         
         channel = [channel for channel in self.server.channels if channel.name == recv[1]]
         
+        
         # Create non-existent channel
         if channel == []:
             new = Channel(recv[1])
+            new.usermodes[self] = 'o'
+            new.modes = "mnt"
             self.server.channels.append(new)
             channel = [new]
         
         channel = channel[0]
+        
+        # Drop if already on channel
+        if channel in self.channels:
+            return
+        
         channel.users.append(self)
         self.channels.append(channel)
         
         self.broadcast(channel.users, "JOIN :%s" % recv[1])
-        self._send(":%s MODE %s +%s" % (self.server.hostname, channel.name, ''.join(channel.modes)))
-        # FIXME:
-        self.send_numeric(353, "@ %s :%s" % (channel.name, " ".join([user.nickname for user in channel.users])))
-        self.send_numeric(366, "%s :End of /NAMES list." % channel.name)
+        self._send(":%s MODE %s +%s" % (self.server.hostname, channel.name, channel.modes))
+        self.handle_NAMES(("NAMES", channel.name))
+    
+    def handle_NAMES(self, recv):
+        if len(recv) < 2:
+            self.send_numeric(461, "NAMES :Not enough parameters")
+            return
         
+        channel = [channel for channel in self.server.channels if channel.name == recv[1]]
+
+        if channel == []:
+            self.send_numeric(401, "%s :No such nick/channel" % recv[1])
+            return
+        
+        channel = channel[0]
+        
+        users = []
+        
+        for user in channel.users:
+            if channel.usermodes.has_key(user):
+                if 'o' in channel.usermodes[user]:
+                    users.append('@'+user.nickname)
+                elif 'h' in channel.usermodes[user]:
+                    users.append('%'+user.nickname)
+                elif 'v' in channel.usermodes[user]:
+                    users.append('+'+user.nickname)
+            else:
+                users.append(user.nickname)
+        
+        self.send_numeric(353, "@ %s :%s" % (channel.name, " ".join(users)))
+        self.send_numeric(366, "%s :End of /NAMES list." % channel.name)
 
 class Channel:
     def __init__(self, name):
         self.name = name
         self.users = []
         self.modes = []
-        self.usermodes = []
+        self.usermodes = {}
         self.topic = ""
         self.topic_author = ""
         self.topic_time = 0
