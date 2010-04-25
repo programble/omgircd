@@ -329,7 +329,12 @@ class User:
             self.send_numeric(461, "JOIN :Not enough parameters")
             return
         
-        channel = [channel for channel in self.server.channels if channel.name == recv[1]]
+        # Channels must begin with #
+        if recv[1][0] != '#':
+            self.send_numeric(403, "%s :No such channel" % recv[1])
+            return
+        
+        channel = [channel for channel in self.server.channels if channel.name.lower() == recv[1].lower()]
         
         # Create non-existent channel
         if channel == []:
@@ -367,7 +372,7 @@ class User:
         else:
             reason = ""
         
-        channel = [channel for channel in self.channels if channel.name == target]
+        channel = [channel for channel in self.channels if channel.name.lower() == target.lower()]
         
         if channel == []:
             self.send_numeric(442, "%s :You're not on that channel" % target)
