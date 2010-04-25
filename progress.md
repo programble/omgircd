@@ -38,3 +38,7 @@ In order of priority:
  * Disallow UTF-8 in nicks and channel names
  * Fix ping flooding
  * Separate `/NAMES` response into multiple replies
+ * Move repetitive code to functions:
+   * For finding a channel by name
+   * For finding a user by name
+   * For verifying the correct amount of arguments (maybe)
