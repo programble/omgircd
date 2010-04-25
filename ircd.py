@@ -362,7 +362,7 @@ class User:
         if channel == []:
             new = Channel(recv[1])
             new.usermodes[self] = 'o'
-            new.modes = "mnt"
+            new.modes = "nt"
             self.server.channels.append(new)
             channel = [new]
         
@@ -507,6 +507,36 @@ class User:
             
             self.send_numeric(324, "%s +%s" % (channel.name, channel.modes))
             self.send_numeric(329, "%s %d" % (channel.name, channel.creation))
+        elif len(recv) == 3:
+            # /mode #channel +mnt
+            
+            channel = [channel for channel in self.server.channels if channel.name == recv[1]]
+            if channel == []:
+                self.send_numeric(401, "%s :No such nick/channel" % recv[1])
+                return
+            channel = channel[0]
+            
+            if not channel.usermodes.has_key(self):
+                self.send_numeric(482, "%s :You're not a channel operator" % channel.name)
+                return
+            if 'o' not in channel.usermodes[self]:
+                self.send_numeric(482, "%s :You're not a channel operator" % channel.name)
+                return
+            
+            action = ''
+            for m in recv[2]:
+                if m == '+':
+                    action = '+'
+                elif m == '-':
+                    action = '-'
+                else:
+                    if action == '+':
+                        if m not in channel.modes:
+                            channel.modes += m
+                    elif action == '-':
+                        channel.modes = channel.modes.replace(m, '')
+            
+            self.broadcast(channel.users, "MODE %s %s" % (channel.name, recv[2]))
     
     def handle_QUIT(self, recv):
         if len(recv) > 1:
