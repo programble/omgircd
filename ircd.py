@@ -204,6 +204,11 @@ class User:
                 self.send_numeric(432, "%s :Erroneous Nickname" % nick)
                 return
         
+        # Check nick length
+        if len(nick) > 16:
+            self.send_numeric(432, "%s :Erroneous Nickname" % nick)
+            return
+        
         # Check if nick is already in use
         if nick.lower() in [user.nickname.lower() for user in self.server.users]:
             self.send_numeric(433, "%s :Nickname is already in use" % nick)
@@ -334,6 +339,18 @@ class User:
         if recv[1][0] != '#':
             self.send_numeric(403, "%s :No such channel" % recv[1])
             return
+        
+        # Channel name must be less than 50
+        if len(recv[1]) > 50:
+            self.send_numeric(479, "%s :Illegal channel name" % recv[1])
+            return
+        
+        # Check if channel name is valid
+        valid = "abcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789`~!@#$%^&*()-=_+[]{}\\|;':\"./<>?"
+        for c in recv[1]:
+            if c not in valid:
+                self.send_numeric(479, "%s :Illegal channel name" % recv[1])
+                return
         
         channel = [channel for channel in self.server.channels if channel.name.lower() == recv[1].lower()]
         
