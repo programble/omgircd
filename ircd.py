@@ -552,7 +552,7 @@ class Server(socket.socket):
             
             # Ping timeouts
             for user in [user for user in self.users if time.time() - user.ping > 250.0]:
-                user.quit("Ping timeout: 250 seconds")
+                user.quit("Ping timeout: %d seconds" % int(time.time() - user.ping))
             
             # Send out pings
             for user in [user for user in self.users if time.time() - user.ping > 125.0]:
