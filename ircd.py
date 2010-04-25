@@ -198,8 +198,9 @@ class User:
             return
         
         # Check if nick is valid
-        for invalid in "!@#$%&*()=~:;'\".,/?+<> \x01\x02\x03\x1F\x0F":
-            if invalid in nick:
+        valid = "abcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789`^-_[]{}|\\"
+        for c in nick:
+            if c not in valid:
                 self.send_numeric(432, "%s :Erroneous Nickname" % nick)
                 return
         

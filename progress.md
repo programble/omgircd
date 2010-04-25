@@ -52,7 +52,7 @@ In order of priority:
 
 ### Fixes
 
- * Disallow UTF-8 in nicks and channel names
+ * Disallow UTF-8 in nicks (_done_) and channel names
  * Fix ping flooding
  * Separate `/NAMES` response into multiple replies
  * Move repetitive code to functions:
