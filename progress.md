@@ -48,6 +48,7 @@ In order of priority:
    * Ability to `/KICK` and set `/MODE`
    * Ability to `/TOPIC` if channel mode `+t` is set
  * Maximum connections from one IP
+ * Detect excess flood and kill
 
 ### Fixes
 
