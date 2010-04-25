@@ -59,3 +59,4 @@ In order of priority:
    * For finding a channel by name
    * For finding a user by name
    * For verifying the correct amount of arguments (maybe)
+ * Add length limit on topics
