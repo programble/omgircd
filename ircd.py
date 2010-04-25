@@ -550,7 +550,7 @@ class Server(socket.socket):
                 user.quit("Ping timeout: 250 seconds")
             
             # Send out pings
-            for user in [user for user in self.users if time.time() - user.ping > 225.0]:
+            for user in [user for user in self.users if time.time() - user.ping > 125.0]:
                 user.socket.send("PING :%s\r\n" % self.hostname)
     
     def shutdown(self):
