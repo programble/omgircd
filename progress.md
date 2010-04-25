@@ -32,6 +32,7 @@ In order of priority:
 4. `/USERHOST`
 5. `/LIST`
 6. `/KICK`
+7. `/INVITE`
 
 ### Fixes
 
