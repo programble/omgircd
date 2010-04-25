@@ -34,6 +34,21 @@ In order of priority:
 6. `/KICK`
 7. `/INVITE`
 
+### Features
+
+ * Channel bans
+ * Server bans:
+   * K-Line
+   * Z-Line
+ * Channel modes:
+   * `+m` Moderated
+   * `+t` Topic protection
+   * `+n` No outside messages
+ * Channel Operators:
+   * Ability to `/KICK` and set `/MODE`
+   * Ability to `/TOPIC` if channel mode `+t` is set
+ * Maximum connections from one IP
+
 ### Fixes
 
  * Disallow UTF-8 in nicks and channel names
