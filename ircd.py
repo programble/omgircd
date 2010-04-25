@@ -356,7 +356,7 @@ class User:
         channel.users.append(self)
         self.channels.append(channel)
         
-        self.broadcast(channel.users, "JOIN :%s" % recv[1])
+        self.broadcast(channel.users, "JOIN :%s" % channel.name)
         if channel.topic_time != 0:
             self.handle_TOPIC(("TOPIC", channel.name))
         self.handle_NAMES(("NAMES", channel.name))
@@ -379,7 +379,7 @@ class User:
             return
         
         channel = channel[0]
-        self.broadcast(channel.users, "PART %s :%s" % (target, reason))
+        self.broadcast(channel.users, "PART %s :%s" % (channel.name, reason))
         self.channels.remove(channel)
         channel.users.remove(self)
         if channel.usermodes.has_key(self):
