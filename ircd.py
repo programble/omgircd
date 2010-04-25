@@ -135,7 +135,9 @@ class User:
             
             self.ping = time.time()
             
-            if recv.strip() == '':
+            recv = recv.strip()
+            
+            if recv == '':
                 continue
             
             parsed = self.parse_command(recv)
@@ -168,6 +170,8 @@ class User:
                 self.handle_ISON(parsed)
             elif command.upper() == "AWAY":
                 self.handle_AWAY(parsed)
+            elif command.upper() == "MODE":
+                self.handle_MODE(parsed)
             elif command.upper() == "QUIT":
                 self.handle_QUIT(parsed)
             else:
@@ -488,6 +492,22 @@ class User:
             self.away = recv[1]
             self.send_numeric(306, ":You have been marked as being away")
     
+    def handle_MODE(self, recv):
+        if len(recv) < 2:
+            self.send_numeric(461, "MODE :Not enough parameters")
+            return
+        elif len(recv) == 2:
+            # /mode #channel, send back channel modes
+            
+            channel = [channel for channel in self.server.channels if channel.name == recv[1]]
+            if channel == []:
+                self.send_numeric(401, "%s :No such nick/channel" % recv[1])
+                return
+            channel = channel[0]
+            
+            self.send_numeric(324, "%s +%s" % (channel.name, channel.modes))
+            self.send_numeric(329, "%s %d" % (channel.name, channel.creation))
+    
     def handle_QUIT(self, recv):
         if len(recv) > 1:
             reason = recv[1]
@@ -500,11 +520,12 @@ class Channel:
     def __init__(self, name):
         self.name = name
         self.users = []
-        self.modes = []
+        self.modes = ''
         self.usermodes = {}
         self.topic = ""
         self.topic_author = ""
         self.topic_time = 0
+        self.creation = int(time.time())
     
     def __repr__(self):
         return "<Channel '%s'>" % self.name
