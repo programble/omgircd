@@ -299,9 +299,14 @@ class User:
             if channel == []:
                 self.send_numeric(401, "%s :No such nick/channel" % target)
                 return
+            channel = channel[0]
+            
+            if self not in channel.users and 'n' in channel.modes:
+                self.send_numeric(404, "%s :Cannot send to channel" % channel.name)
+                return
             
             # Broadcast message
-            self.broadcast([user for user in channel[0].users if user != self], "PRIVMSG %s :%s" % (target, msg))
+            self.broadcast([user for user in channel.users if user != self], "PRIVMSG %s :%s" % (target, msg))
     
     def handle_NOTICE(self, recv):
         if len(recv) < 2:

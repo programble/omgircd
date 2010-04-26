@@ -43,11 +43,11 @@ In order of priority:
  * Channel modes:
    * `+m` Moderated
    * (__DONE__) `+t` Topic protection
-   * `+n` No outside messages
+   * (__DONE__) `+n` No outside messages
  * Channel Operators:
    * Ability to `/KICK`
    * (__DONE__) Ability to set `/MODE`
-   * Ability to `/TOPIC` if channel mode `+t` is set
+   * (__DONE__) Ability to `/TOPIC` if channel mode `+t` is set
  * Maximum connections from one IP
  * Detect excess flood and kill
 
@@ -62,4 +62,4 @@ In order of priority:
    * For verifying the correct amount of arguments (maybe)
  * Add length limit on topics
  * (__DONE__) Only allow topic setting by ops when channel mode `+t` is set
- * Only allow users on a channel to `/PRIVMSG` it when channel mode `+n` is set
+ * (__DONE__) Only allow users on a channel to `/PRIVMSG` it when channel mode `+n` is set
