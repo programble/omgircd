@@ -25,7 +25,7 @@ Todo
 
 ### Commands
 
-In order of priority:
+In order of <strike>priority</strike>:
 
 1. <strike>`/MODE`</strike>
 2. `/WHOIS`
