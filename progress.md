@@ -25,15 +25,14 @@ Todo
 
 ### Commands
 
-In order of <strike>priority</strike>:
+In order of priority:
 
-1. <strike>`/MODE`</strike>
-2. `/WHOIS`
-3. `/WHO`
-4. `/USERHOST`
-5. `/LIST`
-6. `/KICK`
-7. `/INVITE`
+1. `/WHOIS`
+2. `/WHO`
+3. `/USERHOST`
+4. `/LIST`
+5. `/KICK`
+6. `/INVITE`
 
 ### Features
 
