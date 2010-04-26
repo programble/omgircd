@@ -30,8 +30,8 @@ In order of priority:
 1. `/WHOIS`
 2. `/WHO`
 3. `/USERHOST`
-4. `/LIST`
-5. `/KICK`
+4. `/KICK`
+5. `/LIST`
 6. `/INVITE`
 
 ### Features
