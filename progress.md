@@ -60,3 +60,5 @@ In order of priority:
    * For finding a user by name
    * For verifying the correct amount of arguments (maybe)
  * Add length limit on topics
+ * Only allow topic setting by ops when channel mode `+t` is set
+ * Only allow users on a channel to `/PRIVMSG` it when channel mode `+n` is set

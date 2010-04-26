@@ -124,14 +124,14 @@ class User:
         self.server.users.remove(self)
         
         # Close socket
-        self.socket.close()
+        #self.socket.close()
         
         # This User object should now be garbage collected...
     
     def handle_recv(self):
-        while self.recvbuffer.find("\r\n") != -1:
-            recv = self.recvbuffer[:self.recvbuffer.find("\r\n")]
-            self.recvbuffer = self.recvbuffer[self.recvbuffer.find("\r\n")+2:]
+        while self.recvbuffer.find("\n") != -1:
+            recv = self.recvbuffer[:self.recvbuffer.find("\n")]
+            self.recvbuffer = self.recvbuffer[self.recvbuffer.find("\n")+1:]
             
             self.ping = time.time()
             
@@ -139,6 +139,8 @@ class User:
             
             if recv == '':
                 continue
+            
+            #print self, recv
             
             parsed = self.parse_command(recv)
             command = parsed[0]
@@ -202,7 +204,7 @@ class User:
             return
         
         # Check if nick is valid
-        valid = "abcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789`^-_[]{}|\\"
+        valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789`^-_[]{}|\\"
         for c in nick:
             if c not in valid:
                 self.send_numeric(432, "%s :Erroneous Nickname" % nick)
@@ -537,6 +539,47 @@ class User:
                         channel.modes = channel.modes.replace(m, '')
             
             self.broadcast(channel.users, "MODE %s %s" % (channel.name, recv[2]))
+        else:
+            # /mode #channel +o-v user1 user2
+            
+            channel = [channel for channel in self.server.channels if channel.name == recv[1]]
+            if channel == []:
+                self.send_numeric(401, "%s :No such nick/channel" % recv[1])
+                return
+            channel = channel[0]
+            
+            if not channel.usermodes.has_key(self):
+                self.send_numeric(482, "%s :You're not a channel operator" % channel.name)
+                return
+            if 'o' not in channel.usermodes[self]:
+                self.send_numeric(482, "%s :You're not a channel operator" % channel.name)
+                return
+            
+            modes = []
+            action = ''
+            for m in recv[2]:
+                if m == '+':
+                    action = '+'
+                elif m == '-':
+                    action = '-'
+                elif m in "bohv":
+                    modes.append(action + m)
+            modes = zip(recv[3:], modes)
+            
+            for nick, mode in modes:
+                user = [user for user in channel.users if user.nickname.lower() == nick.lower()]
+                if user != []:
+                    user = user[0]
+                    if channel.usermodes.has_key(user):
+                        if mode[0] == '+':
+                            channel.usermodes[user] += mode[1]
+                        else:
+                            channel.usermodes[user] = channel.usermodes[user].replace(mode[1], "")
+                    else:
+                        if mode[0] == '+':
+                            channel.usermodes[user] = mode[1]
+            
+            self.broadcast(channel.users, "MODE %s %s %s" % (channel.name, recv[2], ' '.join(recv[3:])))
     
     def handle_QUIT(self, recv):
         if len(recv) > 1:
@@ -625,7 +668,10 @@ class Server(socket.socket):
             
             # Send out pings
             for user in [user for user in self.users if time.time() - user.ping > 125.0]:
-                user.socket.send("PING :%s\r\n" % self.hostname)
+                try:
+                    user.socket.send("PING :%s\r\n" % self.hostname)
+                except socket.error, e:
+                    user.quit("Connection reset by peer")
     
     def shutdown(self):
         for user in self.users:
