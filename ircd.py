@@ -119,6 +119,8 @@ class User:
         # Remove user from all channels
         for channel in self.channels:
             channel.users.remove(self)
+            if channel.usermodes.has_key(self):
+                channel.usermodes.pop(self)
         
         # Remove user from server users
         self.server.users.remove(self)
