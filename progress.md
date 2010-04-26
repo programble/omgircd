@@ -27,7 +27,7 @@ Todo
 
 In order of priority:
 
-1. (__DONE__) `/MODE`
+1. <strike>`/MODE`</strike>
 2. `/WHOIS`
 3. `/WHO`
 4. `/USERHOST`
