@@ -305,6 +305,10 @@ class User:
                 self.send_numeric(404, "%s :Cannot send to channel" % channel.name)
                 return
             
+            if 'm' in channel.modes and channel.usermodes[self] == '':
+                self.send_numeric(404, "%s :Cannot send to channel" % channel.name)
+                return
+            
             # Broadcast message
             self.broadcast([user for user in channel.users if user != self], "PRIVMSG %s :%s" % (target, msg))
     

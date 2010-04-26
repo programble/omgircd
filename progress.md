@@ -41,7 +41,7 @@ In order of priority:
    * K-Line
    * Z-Line
  * Channel modes:
-   * `+m` Moderated
+   * (__DONE__) `+m` Moderated
    * (__DONE__) `+t` Topic protection
    * (__DONE__) `+n` No outside messages
  * Channel Operators:
