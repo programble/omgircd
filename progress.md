@@ -18,6 +18,7 @@ Implemented commands
  * `/ISON`
  * `/AWAY`
  * `/QUIT`
+ * `/MODE`
 
 Todo
 ----
@@ -26,7 +27,7 @@ Todo
 
 In order of priority:
 
-1. `/MODE`
+1. (__DONE__) `/MODE`
 2. `/WHOIS`
 3. `/WHO`
 4. `/USERHOST`
@@ -45,7 +46,8 @@ In order of priority:
    * `+t` Topic protection
    * `+n` No outside messages
  * Channel Operators:
-   * Ability to `/KICK` and set `/MODE`
+   * Ability to `/KICK`
+   * (__DONE__) Ability to set `/MODE`
    * Ability to `/TOPIC` if channel mode `+t` is set
  * Maximum connections from one IP
  * Detect excess flood and kill
