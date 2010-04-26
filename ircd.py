@@ -119,8 +119,7 @@ class User:
         # Remove user from all channels
         for channel in self.channels:
             channel.users.remove(self)
-            if channel.usermodes.has_key(self):
-                channel.usermodes.pop(self)
+            channel.usermodes.pop(self)
         
         # Remove user from server users
         self.server.users.remove(self)
@@ -378,6 +377,8 @@ class User:
         
         if channel.users == []:
             channel.usermodes[self] = 'o'
+        else:
+            channel.usermodes[self] = ''
         
         channel.users.append(self)
         self.channels.append(channel)
@@ -408,6 +409,7 @@ class User:
         self.broadcast(channel.users, "PART %s :%s" % (channel.name, reason))
         self.channels.remove(channel)
         channel.users.remove(self)
+        channel.usermodes.pop(self)
         if channel.usermodes.has_key(self):
             channel.usermodes[self] = ''
     
@@ -520,10 +522,7 @@ class User:
                 return
             channel = channel[0]
             
-            if not channel.usermodes.has_key(self):
-                self.send_numeric(482, "%s :You're not a channel operator" % channel.name)
-                return
-            if 'o' not in channel.usermodes[self]:
+            if self not in channel.users or 'o' not in channel.usermodes[self]:
                 self.send_numeric(482, "%s :You're not a channel operator" % channel.name)
                 return
             
@@ -550,10 +549,7 @@ class User:
                 return
             channel = channel[0]
             
-            if not channel.usermodes.has_key(self):
-                self.send_numeric(482, "%s :You're not a channel operator" % channel.name)
-                return
-            if 'o' not in channel.usermodes[self]:
+            if self not in channel.users or 'o' not in channel.usermodes[self]:
                 self.send_numeric(482, "%s :You're not a channel operator" % channel.name)
                 return
             
@@ -572,14 +568,10 @@ class User:
                 user = [user for user in channel.users if user.nickname.lower() == nick.lower()]
                 if user != []:
                     user = user[0]
-                    if channel.usermodes.has_key(user):
-                        if mode[0] == '+':
-                            channel.usermodes[user] += mode[1]
-                        else:
-                            channel.usermodes[user] = channel.usermodes[user].replace(mode[1], "")
+                    if mode[0] == '+':
+                        channel.usermodes[user] += mode[1]
                     else:
-                        if mode[0] == '+':
-                            channel.usermodes[user] = mode[1]
+                        channel.usermodes[user] = channel.usermodes[user].replace(mode[1], "")
             
             self.broadcast(channel.users, "MODE %s %s %s" % (channel.name, recv[2], ' '.join(recv[3:])))
     
