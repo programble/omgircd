@@ -42,7 +42,7 @@ In order of priority:
    * Z-Line
  * Channel modes:
    * `+m` Moderated
-   * `+t` Topic protection
+   * (__DONE__) `+t` Topic protection
    * `+n` No outside messages
  * Channel Operators:
    * Ability to `/KICK`
@@ -61,5 +61,5 @@ In order of priority:
    * For finding a user by name
    * For verifying the correct amount of arguments (maybe)
  * Add length limit on topics
- * Only allow topic setting by ops when channel mode `+t` is set
+ * (__DONE__) Only allow topic setting by ops when channel mode `+t` is set
  * Only allow users on a channel to `/PRIVMSG` it when channel mode `+n` is set

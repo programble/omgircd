@@ -471,7 +471,13 @@ class User:
                 return
             channel = channel[0]
             
-            # TODO: Make sure user is allowed to change topic (chanmode +t requires user to be op)
+            if self not in channel.users:
+                self.send_numeric(442, "%s :You're not on that channel" % channel.name)
+                return
+            
+            if 't' in channel.modes and 'o' not in channel.usermodes[self]:
+                self.send_numeric(482, "%s :You're not a channel operator" % channel.name)
+                return
             
             channel.topic = recv[2]
             channel.topic_author = self.fullname()
