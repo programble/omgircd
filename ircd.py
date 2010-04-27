@@ -97,7 +97,7 @@ class User:
         self.send_numeric(003, ":This server was created %s" % self.server.creationtime)
         self.send_numeric(004, "%s %s  bov" % (self.server.hostname, self.server.version))
         # http://www.irc.org/tech_docs/005.html
-        self.send_numeric(005, "CHANTYPES=# PREFIX=(ov)@+"+" CHANMODES=b,o,h,v NETWORK=%s CASEMAPPING=rfc1459 :Are supported by this server" % self.server.name)
+        self.send_numeric(005, "CHANTYPES=# PREFIX=(ov)@+"+" CHANMODES=b,,,mnt NICKLEN=16 CHANNELLEN=50 TOPICLEN=300 AWAYLEN=160 NETWORK=%s :Are supported by this server" % self.server.name)
         # MOTD
         self.handle_MOTD(("MOTD",))
     
@@ -489,7 +489,7 @@ class User:
                 self.send_numeric(482, "%s :You're not a channel operator" % channel.name)
                 return
             
-            channel.topic = recv[2]
+            channel.topic = recv[2][:300]
             channel.topic_author = self.fullname()
             channel.topic_time = int(time.time())
             
@@ -511,7 +511,7 @@ class User:
             self.away = False
             self.send_numeric(305, ":You are no longer marked as being away")
         else:
-            self.away = recv[1]
+            self.away = recv[1][:160]
             self.send_numeric(306, ":You have been marked as being away")
     
     def handle_MODE(self, recv):
