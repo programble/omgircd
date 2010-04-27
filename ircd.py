@@ -95,8 +95,9 @@ class User:
         self.send_numeric(001, ":Welcome to %s, %s" % (self.server.name, self.fullname()))
         self.send_numeric(002, ":Your host is %s, running version %s" % (self.server.hostname, self.server.version))
         self.send_numeric(003, ":This server was created %s" % self.server.creationtime)
-        self.send_numeric(004, "%s %s  bohv" % (self.server.hostname, self.server.version))
-        self.send_numeric(005, "CHANTYPES=# PREFIX=(ohv)@%+"+" CHANMODES=b,o,h,v NETWORK=%s CASEMAPPING=rfc1459" % self.server.name)
+        self.send_numeric(004, "%s %s  bov" % (self.server.hostname, self.server.version))
+        # http://www.irc.org/tech_docs/005.html
+        self.send_numeric(005, "CHANTYPES=# PREFIX=(ov)@+"+" CHANMODES=b,o,h,v NETWORK=%s CASEMAPPING=rfc1459 :Are supported by this server" % self.server.name)
         # MOTD
         self.handle_MOTD(("MOTD",))
     
@@ -575,7 +576,7 @@ class User:
                     action = '+'
                 elif m == '-':
                     action = '-'
-                elif m in "bohv":
+                elif m in "ov":
                     modes.append(action + m)
             modes = zip(recv[3:], modes)
             
