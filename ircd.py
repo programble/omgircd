@@ -41,6 +41,7 @@ class User:
         self.sendbuffer = ""
         
         self.ping = time.time()
+        self.signon = int(time.time())
         
         self.nickname = "*"
         self.username = "unknown"
@@ -103,7 +104,7 @@ class User:
         self.send_numeric(003, ":This server was created %s" % self.server.creationtime)
         self.send_numeric(004, "%s %s  bov" % (self.server.hostname, self.server.version))
         # http://www.irc.org/tech_docs/005.html
-        self.send_numeric(005, "CHANTYPES=# PREFIX=(ov)@+"+" CHANMODES=b,,,mnt NICKLEN=16 CHANNELLEN=50 TOPICLEN=300 AWAYLEN=160 NETWORK=%s :Are supported by this server" % self.server.name)
+        self.send_numeric(005, "CHANTYPES=# PREFIX=(ov)@+ CHANMODES=b,,,mnt NICKLEN=16 CHANNELLEN=50 TOPICLEN=300 AWAYLEN=160 NETWORK=%s :Are supported by this server" % self.server.name)
         # MOTD
         self.handle_MOTD(("MOTD",))
     
@@ -185,6 +186,8 @@ class User:
                 self.handle_AWAY(parsed)
             elif command.upper() == "MODE":
                 self.handle_MODE(parsed)
+            elif command.upper() == "WHOIS":
+                self.handle_WHOIS(parsed)
             elif command.upper() == "QUIT":
                 self.handle_QUIT(parsed)
             else:
@@ -598,6 +601,27 @@ class User:
                         channel.usermodes[user] = channel.usermodes[user].replace(mode[1], "")
             
             self.broadcast(channel.users, "MODE %s %s %s" % (channel.name, recv[2], ' '.join(recv[3:])))
+    
+    def handle_WHOIS(self, recv):
+        if len(recv) < 2:
+            self.send_numeric(461, "WHOIS :Not enough parameters")
+            return
+        
+        user = filter(lambda u: u.nickname.lower() == recv[1].lower(), self.server.users)
+        
+        if user == []:
+            self.send_numeric(401, "%s :No such nick/channel" % recv[1])
+            self.send_numeric(318, "%s :End of /WHOIS list." % recv[1])
+            return
+        user = user[0]
+        
+        self.send_numeric(311, "%s %s %s * :%s" % (user.nickname, user.username, user.hostname, user.realname))
+        self.send_numeric(319, "%s :%s" % (user.nickname, " ".join([channel.name for channel in user.channels])))
+        self.send_numeric(312, "%s %s :%s" % (user.nickname, self.server.hostname, self.server.name))
+        if user.away:
+            self.send_numeric(301, "%s :%s" % (user.nickname, user.away))
+        self.send_numeric(317, "%s %d %d :seconds idle, signon time" % (user.nickname, int(time.time()) - int(user.ping), user.signon))
+        self.send_numeric(318, "%s :End of /WHOIS list." % user.nickname)
     
     def handle_QUIT(self, recv):
         if len(recv) > 1:

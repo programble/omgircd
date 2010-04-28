@@ -19,6 +19,7 @@ Implemented commands
  * `/AWAY`
  * `/QUIT`
  * `/MODE`
+ * `/WHOIS`
 
 Todo
 ----
@@ -27,12 +28,11 @@ Todo
 
 In order of priority:
 
-1. `/WHOIS`
-2. `/WHO`
-3. `/USERHOST`
-4. `/KICK`
-5. `/LIST`
-6. `/INVITE`
+1. `/WHO`
+2. `/USERHOST`
+3. `/KICK`
+4. `/LIST`
+5. `/INVITE`
 
 ### Features
 
