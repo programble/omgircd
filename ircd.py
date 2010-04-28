@@ -35,7 +35,6 @@ class User:
         self.port = self.addr[1]
         
         self.server = server
-        self.server.users.append(self)
         
         self.recvbuffer = ""
         self.sendbuffer = ""
@@ -109,15 +108,18 @@ class User:
         self.handle_MOTD(("MOTD",))
     
     def quit(self, reason):
-        # Don't quit if already quitted
-        if self not in self.server.users:
-            return
-        
         # Send error to user
         try:
             self.socket.send("ERROR :Closing link: (%s) [%s]\r\n" % (self.fullname(), reason))
         except socket.error:
             pass
+        
+        # Close socket
+        self.socket.close()
+        
+        # Don't quit if already quitted
+        if self not in self.server.users:
+            return
         
         # Send quit to all users in channels user is in
         users = []
@@ -134,9 +136,6 @@ class User:
         
         # Remove user from server users
         self.server.users.remove(self)
-        
-        # Close socket
-        self.socket.close()
         
         # This User object should now be garbage collected...
     
@@ -679,7 +678,7 @@ class Server(socket.socket):
             # Is there a new connection to accept?
             if self in read:
                 # Accept connection and create new user object
-                User(self, self.accept())
+                self.users.append(User(self, self.accept()))
             
             # Read from each user
             for user in [user for user in read if user != self]:
@@ -690,6 +689,12 @@ class Server(socket.socket):
                 if recv == '':
                     user.quit("Remote host closed the connection")
                 user.recvbuffer += recv
+                
+                # Excess Flood
+                if len(user.recvbuffer) > 1024:
+                    user.quit("Excess Flood")
+                    continue
+                
                 user.handle_recv()
             
             # Send to each user
