@@ -34,6 +34,8 @@ class User:
         self.ip = self.addr[0]
         self.port = self.addr[1]
         
+        self.alive = True
+        
         self.server = server
         
         self.recvbuffer = ""
@@ -108,6 +110,7 @@ class User:
         self.handle_MOTD(("MOTD",))
     
     def quit(self, reason):
+        self.alive = False
         # Send error to user
         try:
             self.socket.send("ERROR :Closing link: (%s) [%s]\r\n" % (self.fullname(), reason))
@@ -678,7 +681,9 @@ class Server(socket.socket):
             # Is there a new connection to accept?
             if self in read:
                 # Accept connection and create new user object
-                self.users.append(User(self, self.accept()))
+                user = User(self, self.accept())
+                if user.alive:
+                    self.users.append(user)
             
             # Read from each user
             for user in [user for user in read if user != self]:
