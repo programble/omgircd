@@ -282,6 +282,7 @@ class User:
         if target[0] != "#":
             # Find user
             user = [user for user in self.server.users if user.nickname.lower() == target.lower()]
+            #user = filter(lambda u: u.nickname.lower() == target.lower(), self.server.users)
             
             # User does not exist
             if user == []:
@@ -327,7 +328,7 @@ class User:
         # Notice to user
         if target[0] != "#":
             # Find user
-            user = [user for user in self.server.users if user.nickname.lower() == target.lower()]
+            user = filter(lambda u: user.nickname.lower() == target.lower(), self.server.users)
             
             # User does not exist
             if user == []:
@@ -338,7 +339,7 @@ class User:
             self.broadcast(user, "NOTICE %s :%s" % (target, msg))
         else:
             # Find channel
-            channel = [channel for channel in self.server.channels if channel.name.lower() == target.lower()]
+            channel = filter(lambda c: c.name.lower() == target.lower(), self.server.channels)
             
             if channel == []:
                 self.send_numeric(401, "%s :No such nick/channel" % target)
@@ -369,7 +370,7 @@ class User:
                 self.send_numeric(479, "%s :Illegal channel name" % recv[1])
                 return
         
-        channel = [channel for channel in self.server.channels if channel.name.lower() == recv[1].lower()]
+        channel = filter(lambda c: c.name.lower() == recv[1].lower(), self.server.channels)
         
         # Create non-existent channel
         if channel == []:
@@ -409,7 +410,7 @@ class User:
         else:
             reason = ""
         
-        channel = [channel for channel in self.channels if channel.name.lower() == target.lower()]
+        channel = filter(lambda c: c.name.lower() == target.lower(), self.channels)
         
         if channel == []:
             self.send_numeric(442, "%s :You're not on that channel" % target)
@@ -428,7 +429,7 @@ class User:
             self.send_numeric(461, "NAMES :Not enough parameters")
             return
         
-        channel = [channel for channel in self.server.channels if channel.name == recv[1]]
+        channel = filter(lambda c: c.name.lower() == recv[1].lower(), self.server.channels)
 
         if channel == []:
             self.send_numeric(401, "%s :No such nick/channel" % recv[1])
@@ -442,8 +443,6 @@ class User:
             if channel.usermodes.has_key(user):
                 if 'o' in channel.usermodes[user]:
                     users.append('@'+user.nickname)
-                elif 'h' in channel.usermodes[user]:
-                    users.append('%'+user.nickname)
                 elif 'v' in channel.usermodes[user]:
                     users.append('+'+user.nickname)
                 else:
@@ -461,7 +460,7 @@ class User:
         
         if len(recv) < 3:
             # Send back topic
-            channel = [channel for channel in self.server.channels if channel.name == recv[1]]
+            channel = filter(lambda c: c.name.lower() == recv[1].lower(), self.server.channels)
             if channel == []:
                 self.send_numeric(401, "%s :No such nick/channel" % recv[1])
                 return
@@ -475,7 +474,7 @@ class User:
             self.send_numeric(333, "%s %s %d" % (channel.name, channel.topic_author, channel.topic_time))
         else:
             # Set topic
-            channel = [channel for channel in self.server.channels if channel.name == recv[1]]
+            channel = filter(lambda c: c.name.lower() == recv[1].lower(), self.server.channels)
             if channel == []:
                 self.send_numeric(401, "%s :No such nick/channel" % recv[1])
                 return
@@ -521,7 +520,7 @@ class User:
         elif len(recv) == 2:
             # /mode #channel, send back channel modes
             
-            channel = [channel for channel in self.server.channels if channel.name == recv[1]]
+            channel = filter(lambda c: c.name.lower() == recv[1].lower(), self.server.channels)
             if channel == []:
                 self.send_numeric(401, "%s :No such nick/channel" % recv[1])
                 return
@@ -532,7 +531,7 @@ class User:
         elif len(recv) == 3:
             # /mode #channel +mnt
             
-            channel = [channel for channel in self.server.channels if channel.name == recv[1]]
+            channel = filter(lambda c: c.name.lower() == recv[1].lower(), self.server.channels)
             if channel == []:
                 self.send_numeric(401, "%s :No such nick/channel" % recv[1])
                 return
@@ -559,7 +558,7 @@ class User:
         else:
             # /mode #channel +o-v user1 user2
             
-            channel = [channel for channel in self.server.channels if channel.name == recv[1]]
+            channel = filter(lambda c: c.name.lower() == recv[1].lower(), self.server.channels)
             if channel == []:
                 self.send_numeric(401, "%s :No such nick/channel" % recv[1])
                 return
@@ -581,7 +580,7 @@ class User:
             modes = zip(recv[3:], modes)
             
             for nick, mode in modes:
-                user = [user for user in channel.users if user.nickname.lower() == nick.lower()]
+                user = filter(lambda u: u.nickname.lower() == nick.lower(), channel.users)
                 if user != []:
                     user = user[0]
                     if mode[0] == '+':
