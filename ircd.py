@@ -623,7 +623,8 @@ class User:
         user = user[0]
         
         self.send_numeric(311, "%s %s %s * :%s" % (user.nickname, user.username, user.hostname, user.realname))
-        self.send_numeric(319, "%s :%s" % (user.nickname, " ".join([channel.name for channel in user.channels])))
+        if user.channels != []:
+            self.send_numeric(319, "%s :%s" % (user.nickname, " ".join([channel.name for channel in user.channels])))
         self.send_numeric(312, "%s %s :%s" % (user.nickname, self.server.hostname, self.server.name))
         if user.away:
             self.send_numeric(301, "%s :%s" % (user.nickname, user.away))
