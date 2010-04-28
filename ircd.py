@@ -35,6 +35,7 @@ class User:
         self.port = self.addr[1]
         
         self.server = server
+        self.server.users.append(self)
         
         self.recvbuffer = ""
         self.sendbuffer = ""
@@ -57,6 +58,11 @@ class User:
         self.away = False
         
         self.channels = []
+        
+        # Max connections per ip
+        connections = filter(lambda u: u.ip == self.ip, self.server.users)
+        if len(connections) > 3:
+            self.quit("Too many connections from %s" % self.ip)
     
     def __repr__(self):
         return "<User '%s'>" % self.fullname()
@@ -107,7 +113,10 @@ class User:
             return
         
         # Send error to user
-        self._send("ERROR :Closing link: (%s) [%s]" % (self.fullname(), reason))
+        try:
+            self.socket.send("ERROR :Closing link: (%s) [%s]\r\n" % (self.fullname(), reason))
+        except socket.error:
+            pass
         
         # Send quit to all users in channels user is in
         users = []
@@ -126,7 +135,7 @@ class User:
         self.server.users.remove(self)
         
         # Close socket
-        #self.socket.close()
+        self.socket.close()
         
         # This User object should now be garbage collected...
     
@@ -646,7 +655,7 @@ class Server(socket.socket):
             # Is there a new connection to accept?
             if self in read:
                 # Accept connection and create new user object
-                self.users.append(User(self, self.accept()))
+                User(self, self.accept())
             
             # Read from each user
             for user in [user for user in read if user != self]:

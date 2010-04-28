@@ -48,7 +48,7 @@ In order of priority:
    * Ability to `/KICK`
    * (__DONE__) Ability to set `/MODE`
    * (__DONE__) Ability to `/TOPIC` if channel mode `+t` is set
- * Maximum connections from one IP
+ * (__DONE__) Maximum connections from one IP
  * Detect excess flood and kill
 
 ### Fixes
