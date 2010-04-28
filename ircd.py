@@ -368,8 +368,13 @@ class User:
             return
         
         # Channels must begin with #
-        if recv[1][0] != '#':
+        if recv[1][0] != '#' and recv[1] != "0":
             self.send_numeric(403, "%s :No such channel" % recv[1])
+            return
+        elif recv[1] == "0":
+            # Part all channels
+            for channel in [channel.name for channel in self.channels]:
+                self.handle_PART(("PART", channel))
             return
         
         # Channel name must be less than 50
