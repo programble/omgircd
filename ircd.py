@@ -408,8 +408,6 @@ class User:
         # Create non-existent channel
         if channel == []:
             new = Channel(recv[1])
-            new.usermodes[self] = 'o'
-            new.modes = "nt"
             self.server.channels.append(new)
             channel = [new]
         
@@ -431,6 +429,11 @@ class User:
         if channel.topic_time != 0:
             self.handle_TOPIC(("TOPIC", channel.name))
         self.handle_NAMES(("NAMES", channel.name))
+        if channel.users == [self]:
+            channel.usermodes[self] = 'o'
+            channel.modes = "nt"
+            self._send(":%s MODE %s +nt" % (self.server.hostname, channel.name))
+            self._send(":%s MODE %s +o %s" % (self.server.hostname, channel.name, self.nickname))
     
     def handle_PART(self, recv):
         if len(recv) < 2:
