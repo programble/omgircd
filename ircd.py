@@ -387,7 +387,7 @@ class User:
             return
         
         # Check if channel name is valid
-        valid = "abcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789`~!@#$%^&*()-=_+[]{}\\|;':\"./<>?"
+        valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789`~!@#$%^&*()-=_+[]{}\\|;':\"./<>?"
         for c in recv[1]:
             if c not in valid:
                 self.send_numeric(479, "%s :Illegal channel name" % recv[1])
