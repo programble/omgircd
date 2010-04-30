@@ -63,4 +63,4 @@ In order of priority:
  * (__DONE__) Add length limit on topics
  * (__DONE__) Only allow topic setting by ops when channel mode `+t` is set
  * (__DONE__) Only allow users on a channel to `/PRIVMSG` it when channel mode `+n` is set
- * Prepend usermodes to channel names in `319` `/WHOIS` reply (channel list)
+ * (__DONE__) Prepend usermodes to channel names in `319` `/WHOIS` reply (channel list)

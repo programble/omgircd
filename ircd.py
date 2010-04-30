@@ -459,13 +459,10 @@ class User:
         users = []
         
         for user in channel.users:
-            if channel.usermodes.has_key(user):
-                if 'o' in channel.usermodes[user]:
-                    users.append('@'+user.nickname)
-                elif 'v' in channel.usermodes[user]:
-                    users.append('+'+user.nickname)
-                else:
-                    users.append(user.nickname)
+            if 'o' in channel.usermodes[user]:
+                users.append('@'+user.nickname)
+            elif 'v' in channel.usermodes[user]:
+                users.append('+'+user.nickname)
             else:
                 users.append(user.nickname)
         
@@ -624,7 +621,15 @@ class User:
         
         self.send_numeric(311, "%s %s %s * :%s" % (user.nickname, user.username, user.hostname, user.realname))
         if user.channels != []:
-            self.send_numeric(319, "%s :%s" % (user.nickname, " ".join([channel.name for channel in user.channels])))
+            channels = []
+            for channel in user.channels:
+                if 'o' in channel.usermodes[user]:
+                    channels.append('@' + channel.name)
+                elif 'v' in channel.usermodes[user]:
+                    channels.append('+' + channel.name)
+                else:
+                    channels.append(channel.name)
+            self.send_numeric(319, "%s :%s" % (user.nickname, " ".join(channels)))
         self.send_numeric(312, "%s %s :%s" % (user.nickname, self.server.hostname, self.server.name))
         if user.away:
             self.send_numeric(301, "%s :%s" % (user.nickname, user.away))
