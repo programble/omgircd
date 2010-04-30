@@ -190,6 +190,8 @@ class User:
                 self.handle_MODE(parsed)
             elif command.upper() == "WHOIS":
                 self.handle_WHOIS(parsed)
+            elif command.upper() == "WHO":
+                self.handle_WHO(parsed)
             elif command.upper() == "QUIT":
                 self.handle_QUIT(parsed)
             else:
@@ -635,6 +637,27 @@ class User:
             self.send_numeric(301, "%s :%s" % (user.nickname, user.away))
         self.send_numeric(317, "%s %d %d :seconds idle, signon time" % (user.nickname, int(time.time()) - int(user.ping), user.signon))
         self.send_numeric(318, "%s :End of /WHOIS list." % user.nickname)
+    
+    def handle_WHO(self, recv):
+        if len(recv) < 2:
+            self.send_numeric(461, "WHO :Not enough parameters")
+            return
+        
+        channel = filter(lambda c: c.name.lower() == recv[1].lower(), self.server.channels)
+        
+        if channel == []:
+            self.send_numeric(315, "%s :End of /WHO list." % recv[1])
+            return
+        channel = channel[0]
+        
+        for user in channel.users:
+            modes = ''.join([{'o': '@', 'v': '+'}[x] for x in channel.usermodes[user]])
+            if user.away:
+                away = 'G'
+            else:
+                away = 'H'
+            self.send_numeric(352, "%s %s %s %s %s %s%s :0 %s" % (channel.name, user.username, user.hostname, self.server.hostname, user.nickname, away, modes, user.realname))
+        self.send_numeric(315, "%s :End of /WHO list." % channel.name)
     
     def handle_QUIT(self, recv):
         if len(recv) > 1:
