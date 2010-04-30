@@ -6,6 +6,7 @@ Implemented commands
 
  * `/PING`
  * `/PONG`
+ * `/VERSION`
  * `/NICK`
  * `/USER`
  * `/MOTD`
@@ -33,6 +34,7 @@ In order of priority:
 1. `/LIST`
 2. `/INVITE`
 3. `/USERHOST`
+4. `/LUSERS`
 
 ### Features
 
