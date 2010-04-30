@@ -192,6 +192,8 @@ class User:
                 self.handle_WHOIS(parsed)
             elif command.upper() == "WHO":
                 self.handle_WHO(parsed)
+            elif command.upper() == "KICK":
+                self.handle_KICK(parsed)
             elif command.upper() == "QUIT":
                 self.handle_QUIT(parsed)
             else:
@@ -442,8 +444,6 @@ class User:
         self.channels.remove(channel)
         channel.users.remove(self)
         channel.usermodes.pop(self)
-        if channel.usermodes.has_key(self):
-            channel.usermodes[self] = ''
     
     def handle_NAMES(self, recv):
         if len(recv) < 2:
@@ -658,6 +658,39 @@ class User:
                 away = 'H'
             self.send_numeric(352, "%s %s %s %s %s %s%s :0 %s" % (channel.name, user.username, user.hostname, self.server.hostname, user.nickname, away, modes, user.realname))
         self.send_numeric(315, "%s :End of /WHO list." % channel.name)
+    
+    def handle_KICK(self, recv):
+        if len(recv) < 3:
+            self.send_numeric(461, "KICK :Not enough parameters")
+            return
+        if len(recv) == 3:
+            reason = self.nickname
+        else:
+            reason = recv[3]
+        
+        channel = filter(lambda c: c.name.lower() == recv[1].lower(), self.channels)
+        
+        if channel == []:
+            self.send_numeric(401, "%s :No such nick/channel" % recv[1])
+            return
+        channel = channel[0]
+        
+        user = filter(lambda u: u.nickname.lower() == recv[2].lower(), channel.users)
+        
+        if user == []:
+            self.send_numeric(401, "%s :No such nick/channel" % recv[2])
+            return
+        user = user[0]
+        
+        if 'o' not in channel.usermodes[self]:
+            self.send_numeric(482, "%s :You're not a channel operator" % channel.name)
+            return
+        
+        self.broadcast(channel.users, "KICK %s %s :%s" % (channel.name, user.nickname, reason))
+        
+        user.channels.remove(channel)
+        channel.users.remove(user)
+        channel.usermodes.pop(user)
     
     def handle_QUIT(self, recv):
         if len(recv) > 1:
