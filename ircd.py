@@ -194,6 +194,8 @@ class User:
                 self.handle_WHO(parsed)
             elif command.upper() == "KICK":
                 self.handle_KICK(parsed)
+            elif command.upper() == "VERSION":
+                self.handle_VERSION(parsed)
             elif command.upper() == "QUIT":
                 self.handle_QUIT(parsed)
             else:
@@ -210,6 +212,9 @@ class User:
         for line in self.server.motd.split("\n"):
             self.send_numeric(372, ":- %s" % line)
         self.send_numeric(376, ":End of message of the day.")
+    
+    def handle_VERSION(self, recv):
+        self.send_numeric(351, "%s. %s :http://github.com/programble/omgircd" % (self.server.version, self.server.hostname))
     
     def handle_NICK(self, recv):
         if len(recv) < 2:
@@ -369,6 +374,11 @@ class User:
     def handle_JOIN(self, recv):
         if len(recv) < 2:
             self.send_numeric(461, "JOIN :Not enough parameters")
+            return
+        
+        if ',' in recv[1]:
+            for channel in recv[1].split(','):
+                self.handle_JOIN(("JOIN", channel))
             return
         
         # Channels must begin with #
