@@ -45,7 +45,7 @@ In order of priority:
    * (__DONE__) `+t` Topic protection
    * (__DONE__) `+n` No outside messages
  * Channel Operators:
-   * Ability to `/KICK`
+   * (__DONE__) Ability to `/KICK`
    * (__DONE__) Ability to set `/MODE`
    * (__DONE__) Ability to `/TOPIC` if channel mode `+t` is set
  * (__DONE__) Maximum connections from one IP
