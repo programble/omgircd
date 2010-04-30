@@ -29,10 +29,10 @@ Todo
 
 In order of priority:
 
-1. `/USERHOST`
-2. `/KICK`
-3. `/LIST`
-4. `/INVITE`
+1. `/KICK`
+2. `/LIST`
+3. `/INVITE`
+4. `/USERHOST`
 
 ### Features
 
