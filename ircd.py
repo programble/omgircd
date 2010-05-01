@@ -34,9 +34,9 @@ class User:
         self.ip = self.addr[0]
         self.port = self.addr[1]
         
-        self.alive = True
-        
         self.server = server
+        
+        self.server.users.append(self)
         
         self.recvbuffer = ""
         self.sendbuffer = ""
@@ -110,7 +110,6 @@ class User:
         self.handle_MOTD(("MOTD",))
     
     def quit(self, reason):
-        self.alive = False
         # Send error to user
         try:
             self.socket.send("ERROR :Closing link: (%s) [%s]\r\n" % (self.fullname(), reason))
@@ -121,8 +120,8 @@ class User:
         self.socket.close()
         
         # Don't quit if already quitted
-        if self not in self.server.users:
-            return
+        #if self not in self.server.users:
+        #    return
         
         # Send quit to all users in channels user is in
         users = []
@@ -133,12 +132,15 @@ class User:
         self.broadcast(users, "QUIT :%s" % reason)
         
         # Remove user from all channels
-        for channel in self.channels:
-            channel.users.remove(self)
-            channel.usermodes.pop(self)
+        for channel in [channel for channel in self.server.channels if self in channel.users]:
+            if self in channel.users:
+                channel.users.remove(self)
+            if self in channel.usermodes.keys():
+                channel.usermodes.pop(self)
         
         # Remove user from server users
-        self.server.users.remove(self)
+        if self in self.server.users:
+            self.server.users.remove(self)
         
         # This User object should now be garbage collected...
     
@@ -769,9 +771,7 @@ class Server(socket.socket):
             # Is there a new connection to accept?
             if self in read:
                 # Accept connection and create new user object
-                user = User(self, self.accept())
-                if user.alive:
-                    self.users.append(user)
+                User(self, self.accept())
             
             # Read from each user
             for user in [user for user in read if user != self]:
