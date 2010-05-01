@@ -196,6 +196,8 @@ class User:
                 self.handle_KICK(parsed)
             elif command.upper() == "VERSION":
                 self.handle_VERSION(parsed)
+            elif command.upper() == "LIST":
+                self.handle_LIST(parsed)
             elif command.upper() == "QUIT":
                 self.handle_QUIT(parsed)
             else:
@@ -351,7 +353,7 @@ class User:
         # Notice to user
         if target[0] != "#":
             # Find user
-            user = filter(lambda u: user.nickname.lower() == target.lower(), self.server.users)
+            user = filter(lambda u: u.nickname.lower() == target.lower(), self.server.users)
             
             # User does not exist
             if user == []:
@@ -705,6 +707,12 @@ class User:
         channel.users.remove(user)
         channel.usermodes.pop(user)
     
+    def handle_LIST(self, recv):
+        self.send_numeric(321, "Channel :Users  Name")
+        for channel in self.server.channels:
+            self.send_numeric(322, "%s %d :%s" % (channel.name, len(channel.users), channel.topic))
+        self.send_numeric(323, ":End of /LIST")
+    
     def handle_QUIT(self, recv):
         if len(recv) > 1:
             reason = recv[1]
@@ -756,7 +764,7 @@ class Server(socket.socket):
             read, write, error = select([self] + self.users, sendable, self.users, 25.0)
             
             for user in error:
-                user.quit("Connection reset by peer")
+                user.quit("Error: Connection reset by peer")
             
             # Is there a new connection to accept?
             if self in read:
@@ -770,7 +778,7 @@ class Server(socket.socket):
                 try:
                     recv = user.socket.recv(4096)
                 except socket.error, e:
-                    user.quit("Connection reset by peer")
+                    user.quit("Read error: Connection reset by peer")
                 if recv == '':
                     user.quit("Remote host closed the connection")
                 user.recvbuffer += recv
@@ -788,7 +796,7 @@ class Server(socket.socket):
                     sent = user.socket.send(user.sendbuffer)
                     user.sendbuffer = user.sendbuffer[sent:]
                 except socket.error, e:
-                    user.quit("Connection reset by peer")
+                    user.quit("Write error: Connection reset by peer")
             
             # Garbage collection (Empty Channels)
             for channel in [channel for channel in self.channels if len(channel.users) == 0]:
@@ -803,7 +811,7 @@ class Server(socket.socket):
                 try:
                     user.socket.send("PING :%s\r\n" % self.hostname)
                 except socket.error, e:
-                    user.quit("Connection reset by peer")
+                    user.quit("Write error: Connection reset by peer")
     
     def shutdown(self):
         for user in self.users:
