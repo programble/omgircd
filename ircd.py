@@ -807,7 +807,7 @@ class Server(socket.socket):
     
     def shutdown(self):
         for user in self.users:
-            user.quit("shutdown")
+            user.quit("Server shutdown")
         self.close()
 
 if __name__ == "__main__":
