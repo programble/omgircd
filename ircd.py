@@ -200,6 +200,8 @@ class User:
                 self.handle_VERSION(parsed)
             elif command.upper() == "LIST":
                 self.handle_LIST(parsed)
+            elif command.upper() == "INVITE":
+                self.handle_INVITE(parsed)
             elif command.upper() == "QUIT":
                 self.handle_QUIT(parsed)
             else:
@@ -715,6 +717,42 @@ class User:
             self.send_numeric(322, "%s %d :%s" % (channel.name, len(channel.users), channel.topic))
         self.send_numeric(323, ":End of /LIST")
     
+    def handle_INVITE(self, recv):
+        if len(recv) < 3:
+            self.send_numeric(461, "INVITE :Not enough parameters")
+            return
+
+        user = filter(lambda u: u.nickname.lower() == recv[1].lower(), self.server.users)
+
+        if user == []:
+            self.send_numeric(401, "%s :No such nick/channel" % recv[1])
+            return
+
+        user = user[0]
+        
+        channel = filter(lambda c: c.name.lower() == recv[2].lower(), self.channels)
+        
+        if channel == []:
+            self.send_numeric(401, "%s :No such nick/channel" % recv[2])
+            return
+        
+        channel = channel[0]
+        
+        if self not in channel.users:
+            self.send_numeric(401, "%s :No such nick/channel" % channel.name)
+            return
+
+        if user in channel.users:
+            self.send_numeric(443, "%s %s :is already on channel" % (user.nickname, channel.name))
+            return
+
+        # Send invite to user
+        self.broadcast([user], "INVITE %s %s" % (user.nickname, channel.name))
+
+        # Notify self that invite was successful
+        self.send_numeric(341, "%s %s" % (user.nickname, channel.name))
+
+            
     def handle_QUIT(self, recv):
         if len(recv) > 1:
             reason = recv[1]

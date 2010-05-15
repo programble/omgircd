@@ -24,6 +24,7 @@ Implemented commands
  * `/WHO`
  * `/KICK`
  * `/LIST`
+ * `/INVITE`
 
 Todo
 ----
@@ -32,9 +33,8 @@ Todo
 
 In order of priority:
 
-1. `/INVITE`
-2. `/USERHOST`
-3. `/LUSERS`
+1. `/USERHOST`
+2. `/LUSERS`
 
 ### Features
 
