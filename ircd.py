@@ -681,7 +681,7 @@ class User:
             self.send_numeric(461, "KICK :Not enough parameters")
             return
         if len(recv) == 3:
-            reason = self.nickname
+            reason = recv[2]
         else:
             reason = recv[3]
         
