@@ -43,4 +43,4 @@ available are located in `config.py`.
 Progress
 --------
 
-For documentation on development progress, see [`progress.md`](progress.md).
+For documentation on development progress, see `progress.md`.
