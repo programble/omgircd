@@ -35,6 +35,9 @@ In order of priority:
 
 1. `/USERHOST`
 2. `/LUSERS`
+3. `/KILL`
+4. `/KLINE`
+5. `/ZLINE`
 
 ### Features
 
@@ -52,6 +55,7 @@ In order of priority:
    * (__DONE__) Ability to `/TOPIC` if channel mode `+t` is set
  * (__DONE__) Maximum connections from one IP
  * (__DONE__) Detect excess flood and kill
+ * Oper
 
 ### Fixes
 
