@@ -770,7 +770,7 @@ class User:
             
             user = user[0]
 
-            self.send_numeric(302, "%s=%s%s@%s" % (user.nickname, {True: '-', False: '+'}[bool(self.away)], self.username, self.hostname))
+            self.send_numeric(302, "%s=%s%s@%s" % (user.nickname, {True: '-', False: '+'}[bool(user.away)], user.username, user.hostname))
             
     def handle_QUIT(self, recv):
         if len(recv) > 1:
