@@ -25,6 +25,7 @@ Implemented commands
  * `/KICK`
  * `/LIST`
  * `/INVITE`
+ * `/USERHOST`
 
 Todo
 ----
@@ -33,11 +34,10 @@ Todo
 
 In order of priority:
 
-1. `/USERHOST`
-2. `/LUSERS`
-3. `/KILL`
-4. `/KLINE`
-5. `/ZLINE`
+1. `/LUSERS`
+2. `/KILL`
+3. `/KLINE`
+4. `/ZLINE`
 
 ### Features
 
