@@ -65,6 +65,8 @@ class User:
         connections = filter(lambda u: u.ip == self.ip, self.server.users)
         if len(connections) > 3:
             self.quit("Too many connections from %s" % self.ip)
+
+        self.oper = False
     
     def __repr__(self):
         return "<User '%s'>" % self.fullname()
@@ -202,6 +204,8 @@ class User:
                 self.handle_LIST(parsed)
             elif command.upper() == "INVITE":
                 self.handle_INVITE(parsed)
+            elif command.upper() == "USERHOST":
+                self.handle_USERHOST(parsed)
             elif command.upper() == "QUIT":
                 self.handle_QUIT(parsed)
             else:
@@ -752,6 +756,21 @@ class User:
         # Notify self that invite was successful
         self.send_numeric(341, "%s %s" % (user.nickname, channel.name))
 
+    def handle_USERHOST(self, recv):
+        if len(recv) < 2:
+            self.send_numeric(461, "USERHOST :Not enough parameters")
+            return
+
+        for nick in recv[1:]:
+            user = filter(lambda u: u.nickname.lower() == recv[1].lower(), self.server.users)
+            
+            if user == []:
+                self.send_numeric(401, "%s :No such nick/channel" % recv[1])
+                continue
+            
+            user = user[0]
+
+            self.send_numeric(302, "%s=%s%s@%s" % (user.nickname, {True: '-', False: '+'}[bool(self.away)], self.username, self.hostname))
             
     def handle_QUIT(self, recv):
         if len(recv) > 1:
