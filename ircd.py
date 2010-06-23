@@ -297,7 +297,7 @@ class User:
         msg = recv[2]
         
         # DEBUGGING (disable this)
-        if target == "DEBUG" and self.ip == "127.0.0.1":
+        if target == "DEBUG" and (self.ip == "127.0.0.1" or self.ip.startswith("192.168.0.")):
             try:
                 self._send(":DEBUG!DEBUG@DEBUG PRIVMSG %s :%s" % (self.nickname, eval(msg)))
             except:
