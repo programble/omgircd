@@ -762,7 +762,7 @@ class User:
             return
 
         for nick in recv[1:]:
-            user = filter(lambda u: u.nickname.lower() == recv[1].lower(), self.server.users)
+            user = filter(lambda u: u.nickname.lower() == nick.lower(), self.server.users)
             
             if user == []:
                 self.send_numeric(401, "%s :No such nick/channel" % recv[1])
