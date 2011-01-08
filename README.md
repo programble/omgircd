@@ -1,5 +1,6 @@
 Omgircd
 =======
+![](http://stillmaintained.com/programble/omgircd.png)
 
 Omgircd is an Internet Relay Chat Daemon (IRCd) written in Python. It
 is designed to be as simple as possible, while still providing a
